@@ -1,0 +1,5 @@
+twitter_api_keys:
+  consumer_key: "xxx"
+  consumer_secret: "xxx"
+  access_token: "xxx"
+  secret_access_token: "xxx"

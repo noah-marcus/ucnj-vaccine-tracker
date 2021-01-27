@@ -53,16 +53,19 @@ while(True):
 
                 table_rows = soup.find_all('tr')
 
+                # there are some rows in the table, thus there is some vaccine info
                 if len(table_rows) > 0:
-                    # first row of table will always be the date, remove it
-                    vaccine_rows = table_rows[1:]
 
-                    # if there are still rows, then the table has some vaccine information up
-                    if vaccine_rows:
+                    # capture date a little globally
+                    date = "(No Date Found)"
 
-                        # walk through each individual row
-                        for row in vaccine_rows:
+                    # walk through each individual row
+                    for row in table_rows:
 
+                        # check if row is a date or vaccincation details
+                        if (len(row) == 1):
+                            date = row.text
+                        else:
                             index = 0
                             location = ""
                             availability = ""
@@ -82,19 +85,21 @@ while(True):
                                         availability = column.text
                                         index += 1
 
-                            # print("found - location: {}, availability: {}".format(location, availability))
+                            # print("found - date: {}, location: {}, availability: {}".format(date, location, availability))
                             # now we have location and availability
                             # availability format: "XXX / XXX", split and get fist number
                             if int(availability.split()[0]) > 0:
-                                print("{} - TWEETING: I've detected an update!! Appointments may be available.\n\n There are currently {} spots available at {}. \n\n https://ucnjvaccine.org/index.php/vaccine/vaccine_availability".format(datetime.datetime.now(), availability, location))
-                                api.update_status("I've detected an update!! Appointments may be available.\n\n There are currently {} spots available at {}. \n\n https://ucnjvaccine.org/index.php/vaccine/vaccine_availability".format(availability, location))
+                                print("{} - TWEETING: I've detected an update!! Appointments may be available.\n\n There are currently {} spots available at {} on {}. \n\n https://ucnjvaccine.org/index.php/vaccine/vaccine_availability".format(datetime.datetime.now(), availability, location, date))
+                                api.update_status("I've detected an update!! Appointments may be available.\n\n There are currently {} spots available at {} on {}. \n\n https://ucnjvaccine.org/index.php/vaccine/vaccine_availability".format(datetime.datetime.now(), availability, location, date))
+
                             else:
-                                print("{} - 0 vaccines available at {}".format(datetime.datetime.now(), location))
+                                print("{} - 0 vaccines available at {} on {}".format(datetime.datetime.now(), location, date))
         else:
             print('{} - no vaccine'.format(datetime.datetime.now()))
 
     except Exception as e:
-        print(e)
+        print("{} - Exception!!".format(datetime.datetime.now()))
+        print(str(e))
 
     finally:
         time.sleep(600)
