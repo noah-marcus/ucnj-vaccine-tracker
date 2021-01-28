@@ -2,12 +2,14 @@ import os
 import time
 import datetime
 
-from requests_html import HTMLSession
-from bs4 import BeautifulSoup
 import tweepy
 import yaml
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
+from bs4 import NavigableString
 
-
+# load in twitter api config
 with open('config.yaml', 'r') as config_yaml:
     try:
         twitter_api_keys = yaml.safe_load(config_yaml)["twitter_api_keys"]
@@ -33,67 +35,60 @@ api = tweepy.API(auth)
 while(True):
 
     try:
-        session = HTMLSession()
+        options = Options()
+        options.headless = True
 
-        url = 'https://ucnjvaccine.org/index.php/vaccine/vaccine_availability'
-        r = session.get(url)
-        r.html.render()
+        driver = webdriver.Chrome(options=options)
+        driver.get("https://ucnjvaccine.org/index.php/vaccine/vaccine_availability")
 
-        database_grouping = r.html.find('#datatable-grouping', first=True)
-        no_covid_vaccine_search = database_grouping.search('There are no appointments at this time')
+        table_element = driver.find_element_by_id('datatable-grouping')
+        table_element = table_element.find_element_by_tag_name('tbody')
+        table_html = table_element.get_attribute('innerHTML')
 
-        # the search could not find this expression, which means the table has some data in it
-        if not no_covid_vaccine_search:
+        if 'There are no appointments at this time' not in table_html:
+            soup = BeautifulSoup(table_html, 'html.parser')
+            table_rows = soup.find_all('tr')
 
+            # capture date a little globally
+            date = "(No Date Found)"
 
-            table_body = database_grouping.find('tbody')
-            if table_body and len(table_body) > 0:
-                table_html = table_body[0].html
-                soup = BeautifulSoup(table_html, 'html.parser')
+            # walk through each individual row
+            for row in table_rows:
 
-                table_rows = soup.find_all('tr')
+                # if row only has one column, it is the date
+                if (len(row) == 1):
+                    date = row.text
+                else:
+                    index = 0
+                    location = ""
+                    availability = ""
 
-                # there are some rows in the table, thus there is some vaccine info
-                if len(table_rows) > 0:
+                    # walk through each column in the row, collect data on location and availability
+                    # first col = location, second col = availability
+                    for column in row:
 
-                    # capture date a little globally
-                    date = "(No Date Found)"
+                        if isinstance(column, NavigableString) or column == "\n":
+                            continue
 
-                    # walk through each individual row
-                    for row in table_rows:
+                        # print("index: {}, text: {}".format(index, column.text))
 
-                        # check if row is a date or vaccincation details
-                        if (len(row) == 1):
-                            date = row.text
-                        else:
-                            index = 0
-                            location = ""
-                            availability = ""
+                        if index == 0:
+                            location = column.text
+                            index += 1
+                        elif index == 1:
+                            availability = column.text
+                            index += 1
 
-                            # walk through each column in the row, collect data on location and availability
-                            # first col = location, second col = availability
-                            for column in row:
+                    # print("found - date: {}, location: {}, availability: {}".format(date, location, availability))
+                    # now we have location and availability
+                    # availability format: "XXX / XXX", split and get fist number
+                    if int(availability.split()[0]) > 0:
+                        print("{} - TWEETING: I've detected an update!! Appointments may be available.\n\n There are currently {} spots available at {} on {}. \n\n https://ucnjvaccine.org/index.php/vaccine/vaccine_availability".format(datetime.datetime.now(), availability, location, date))
+                        api.update_status("I've detected an update!! Appointments may be available.\n\n There are currently {} spots available at {} on {}. \n\n https://ucnjvaccine.org/index.php/vaccine/vaccine_availability".format(availability, location, date))
 
-                                # remove all new lines
-                                if not column == "\n":
-                                    # print("index: {}, text: {}".format(index, column.text))
+                    else:
+                        print("{} - 0 vaccines available at {} on {}".format(datetime.datetime.now(), location, date))
 
-                                    if index == 0:
-                                        location = column.text
-                                        index += 1
-                                    elif index == 1:
-                                        availability = column.text
-                                        index += 1
-
-                            # print("found - date: {}, location: {}, availability: {}".format(date, location, availability))
-                            # now we have location and availability
-                            # availability format: "XXX / XXX", split and get fist number
-                            if int(availability.split()[0]) > 0:
-                                print("{} - TWEETING: I've detected an update!! Appointments may be available.\n\n There are currently {} spots available at {} on {}. \n\n https://ucnjvaccine.org/index.php/vaccine/vaccine_availability".format(datetime.datetime.now(), availability, location, date))
-                                api.update_status("I've detected an update!! Appointments may be available.\n\n There are currently {} spots available at {} on {}. \n\n https://ucnjvaccine.org/index.php/vaccine/vaccine_availability".format(datetime.datetime.now(), availability, location, date))
-
-                            else:
-                                print("{} - 0 vaccines available at {} on {}".format(datetime.datetime.now(), location, date))
         else:
             print('{} - no vaccine'.format(datetime.datetime.now()))
 
@@ -102,4 +97,5 @@ while(True):
         print(str(e))
 
     finally:
-        time.sleep(600)
+        driver.quit()
+        time.sleep(300)

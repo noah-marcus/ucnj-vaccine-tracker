@@ -4,11 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-requests--html = "*"
-requests-html = "*"
 tweepy = "*"
 beautifulsoup4 = "*"
 pyyaml = "*"
+pyopenssl = "*"
+ndg-httpsclient = "*"
+pyasn1 = "*"
+selenium = "*"
 
 [dev-packages]
 
