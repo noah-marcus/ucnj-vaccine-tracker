@@ -3,3 +3,8 @@ twitter_api_keys:
   consumer_secret: "xxx"
   access_token: "xxx"
   secret_access_token: "xxx"
+facebook_api_keys:
+  app_id: "xxx"                 # not needed, for safekeeping
+  app_secret: "xxx"             # not needed, for safekeeping
+  user_acces_token: "xxx"       # not needed, for safekeeping
+  page_access_token: "xxx"      # required

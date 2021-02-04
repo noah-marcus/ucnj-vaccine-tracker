@@ -11,6 +11,7 @@ pyopenssl = "*"
 ndg-httpsclient = "*"
 pyasn1 = "*"
 selenium = "*"
+facebook-sdk = "*"
 
 [dev-packages]
 
