@@ -8,3 +8,4 @@ facebook_api_keys:
   app_secret: "xxx"             # not needed, for safekeeping
   user_acces_token: "xxx"       # not needed, for safekeeping
   page_access_token: "xxx"      # required
+_2captcha_api_key: "xxx"

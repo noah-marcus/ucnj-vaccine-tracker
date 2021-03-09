@@ -12,6 +12,8 @@ ndg-httpsclient = "*"
 pyasn1 = "*"
 selenium = "*"
 facebook-sdk = "*"
+requests = "*"
+fake-useragent = "*"
 
 [dev-packages]
 
