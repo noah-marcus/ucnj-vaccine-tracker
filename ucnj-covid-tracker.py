@@ -63,7 +63,22 @@ def configure_2captcha():
             exit(0)
 
 def build_msg(results):
-    msg = "Appointments live!\n\nMust be a resident or work in Union County. \n\nCheck the website: ucnjvaccine.org/index.php/vaccine/vaccine_availability\n\n"
+    msg = "Appointments live!\n\nMust be a resident or work in Union County.\n\nCheck the website: ucnjvaccine.org/index.php/vaccine/vaccine_availability?twid=uvb\n\nAppointments available for "
+
+    # put in dates of vaccines available
+    i=1
+    num_appts_available = len(results)
+    dates_reported = []
+    for appt in results:
+        if not appt['date'] in dates_reported:
+            if (i > 1 and i < num_appts_available):
+                msg += ", "
+
+            msg += appt['date']
+            dates_reported.append(appt['date'])
+
+        i+=1
+
     return msg
 
 # function for posting to twitter
@@ -102,10 +117,10 @@ def post(msg, tweet_id=None):
 if __name__ == "__main__":
 
     # configure APIs
-    twitter_api = configure_twitter()
+    # twitter_api = configure_twitter()
     # facebook_api = configure_facebook()
-    _2captcha_api_key = configure_2captcha()
-
+    # _2captcha_api_key = configure_2captcha()
+    _2captcha_api_key = "test"
     # union county captcha site key
     captcha_site_key = "6LdYK1MaAAAAAPjTovMhKTgBChwIs5FEnpgRI06B"
 
@@ -121,7 +136,7 @@ if __name__ == "__main__":
             # appointments available! send out alerts
             print("{} - Appointments found!".format(datetime.datetime.now()))
             msg = build_msg(appts)
-            tweet_id = post(msg)
+            # tweet_id = post(msg)
 
             # wait until they are not available again
             while(appts != None):
@@ -133,7 +148,7 @@ if __name__ == "__main__":
             # there are no more appointments
             print('{} - There are no more appointments available'.format(datetime.datetime.now()))
             done_msg = "All available apointments are now gone."
-            post(done_msg, tweet_id)
+            # post(done_msg, tweet_id)
 
         print("{} - Done. Sleeping for 300 seconds.".format(datetime.datetime.now()))
         print("******************************************\n")

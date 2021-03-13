@@ -151,7 +151,7 @@ def find_appointments(table_html):
 
             # now we have location and status
             if (available):
-                appt = "Appointments available at {} on {}".format(location, date)
+                appt = {"location": location, "date": date}
                 appts.append(appt)
 
     return appts
